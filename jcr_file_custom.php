@@ -160,7 +160,7 @@ if (txpinterface === 'admin') {
 }
 
   /**
-   * Public tag: show custom file field
+   * Public tag: Output custom file field
    * @param  string $atts[escape] Convert special characters to HTML entities.
    * @return string custom field output
    * <code>
@@ -194,7 +194,7 @@ if (0) {
 # --- BEGIN PLUGIN HELP ---
 h1. jcr_file_custom
 
-Adds a single extra custom field of up to 255 characters to the "Admin › Files":http://docs.textpattern.io/administration/files-panel panel and provides a corresponding tag to output the custom field. 
+Adds a single extra custom field of up to 255 characters to the "Content › Files":http://docs.textpattern.io/administration/files-panel panel and provides a corresponding tag to output the custom field. 
 
 
 h2. Use cases
@@ -239,13 +239,13 @@ p. when the file custom field is used to store the Image ID# of the document cov
 
 h2. Changing the label of the custom field
 
-The name of custom field can be changed by specifying a new label using the _Install from Textpack_ field in the "Admin › Languages":http://docs.textpattern.io/administration/languages-panel.html panel. Enter your own information in the following pattern and click *Upload*:
+The name of custom field can be changed by specifying a new label using the _Install from Textpack_ field in the "Admin › Languages":http://docs.textpattern.io/administration/languages-panel panel. Enter your own information in the following pattern and click *Upload*:
 
 bc.. #@admin
 #@language en-gb
 jcr_file_custom => Your label
 
-p. replacing @en-gb@ with your own language and @Image ID@ with your own desired label.
+p. replacing @en-gb@ with your own language and @Your label@ with your own desired label.
 
 
 h2(#deinstallation). De-installation
