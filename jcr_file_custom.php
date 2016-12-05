@@ -17,7 +17,7 @@ $plugin['name'] = 'jcr_file_custom';
 // 1 = Plugin help is in raw HTML.  Not recommended.
 # $plugin['allow_html_help'] = 1;
 
-$plugin['version'] = '0.1';
+$plugin['version'] = '0.1.1';
 $plugin['author'] = 'jcr / txpbuilders';
 $plugin['author_uri'] = 'http://txp.builders';
 $plugin['description'] = 'Adds a custom field to the files panel';
@@ -45,7 +45,7 @@ $plugin['type'] = '1';
 if (!defined('PLUGIN_HAS_PREFS')) define('PLUGIN_HAS_PREFS', 0x0001); // This plugin wants to receive "plugin_prefs.{$plugin['name']}" events
 if (!defined('PLUGIN_LIFECYCLE_NOTIFY')) define('PLUGIN_LIFECYCLE_NOTIFY', 0x0002); // This plugin wants to receive "plugin_lifecycle.{$plugin['name']}" events
 
-$plugin['flags'] = '';
+$plugin['flags'] = '2';
 
 // Plugin 'textpack' is optional. It provides i18n strings to be used in conjunction with gTxt().
 // Syntax:
@@ -254,6 +254,10 @@ The plugin cleans up after itself: deinstalling the plugin removes the extra col
 
 
 h2(#changelog). Changelog
+
+h3. Version 0.1.1 – 2016/12/05
+
+* Remedy table not being created on install 
 
 h3. Version 0.1 – 2016/03/04
 

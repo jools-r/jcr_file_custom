@@ -61,6 +61,10 @@ The plugin cleans up after itself: deinstalling the plugin removes the extra col
 
 h2(#changelog). Changelog
 
+h3. Version 0.1.1 – 2016/12/05
+
+* Remedy table not being created on install 
+
 h3. Version 0.1 – 2016/03/04
 
 * First release
