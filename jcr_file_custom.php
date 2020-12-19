@@ -17,10 +17,10 @@ $plugin['name'] = 'jcr_file_custom';
 // 1 = Plugin help is in raw HTML.  Not recommended.
 # $plugin['allow_html_help'] = 1;
 
-$plugin['version'] = '0.1.1';
+$plugin['version'] = '0.2.0';
 $plugin['author'] = 'jcr / txpbuilders';
 $plugin['author_uri'] = 'http://txp.builders';
-$plugin['description'] = 'Adds a custom field to the files panel';
+$plugin['description'] = 'Adds multiple custom field to the files panel';
 
 // Plugin load order:
 // The default value of 5 would fit most plugins, while for instance comment
@@ -45,7 +45,7 @@ $plugin['type'] = '1';
 if (!defined('PLUGIN_HAS_PREFS')) define('PLUGIN_HAS_PREFS', 0x0001); // This plugin wants to receive "plugin_prefs.{$plugin['name']}" events
 if (!defined('PLUGIN_LIFECYCLE_NOTIFY')) define('PLUGIN_LIFECYCLE_NOTIFY', 0x0002); // This plugin wants to receive "plugin_lifecycle.{$plugin['name']}" events
 
-$plugin['flags'] = '2';
+$plugin['flags'] = '3';
 
 // Plugin 'textpack' is optional. It provides i18n strings to be used in conjunction with gTxt().
 // Syntax:
@@ -54,12 +54,12 @@ $plugin['flags'] = '2';
 // #@language ISO-LANGUAGE-CODE
 // abc_string_name => Localized String
 
-$plugin['textpack'] = <<< EOT
+$plugin['textpack'] = <<<EOT
 #@admin
-#@language en-gb
-jcr_file_custom => Image ID
-#@language de-de
-jcr_file_custom => Bild ID
+#@language en
+jcr_file_custom => File custom fields
+#@language de
+jcr_file_custom => Datei Custom-Felder
 EOT;
 
 // End of textpack
@@ -70,45 +70,93 @@ if (!defined('txpinterface'))
 # --- BEGIN PLUGIN CODE ---
 class jcr_file_custom
 {
-	/**
-	 * Initialise.
-	 */
-	 function __construct()
-	{
-		// Hook into the system's callbacks.
-		register_callback(array(__CLASS__, 'lifecycle'), 'plugin_lifecycle.jcr_file_custom');
-		register_callback(array(__CLASS__, 'ui'), 'file_ui', 'extend_detail_form');
-		register_callback(array(__CLASS__, 'save'), 'file', 'file_save');
-	}
+    /**
+     * Initialise.
+     */
+     function __construct()
+    {
+    	// Hook into the system's callbacks.
+    	register_callback(array(__CLASS__, 'lifecycle'), 'plugin_lifecycle.jcr_file_custom');
+    	register_callback(array(__CLASS__, 'ui'), 'file_ui', 'extend_detail_form');
+    	register_callback(array(__CLASS__, 'save'), 'file', 'file_save');
+
+        // Prefs pane for custom fields
+        add_privs("prefs.jcr_file_custom", "1");
+
+        // Redirect 'Options' link on plugins panel to preferences pane
+        add_privs("plugin_prefs.jcr_file_custom", "1");
+        register_callback([__CLASS__, "options_prefs_redirect"], "plugin_prefs.jcr_file_custom");
+    }
 
 	/**
-   * Add and remove custom field from txp_file table.
-   *
-   * @param $event string
-   * @param $step string  The lifecycle phase of this plugin
-   */
-  public static function lifecycle($event, $step)
-  {
-      switch ($step) {
-          case 'enabled':
-              break;
-          case 'disabled':
-              break;
-          case 'installed':
-              safe_alter(
-                'txp_file',
-                'ADD COLUMN jcr_file_custom VARCHAR(255) NULL AFTER author'
-              );
-              break;
-          case 'deleted':
-              safe_alter(
-                'txp_file',
-                'DROP COLUMN jcr_file_custom'
-              );
-              break;
-      }
-      return;
-  }
+     * Add and remove custom field from txp_file table.
+     *
+     * @param $event string
+     * @param $step string  The lifecycle phase of this plugin
+     */
+    public static function lifecycle($event, $step)
+    {
+        switch ($step) {
+            case 'enabled':
+                add_privs("prefs.jcr_file_custom", "1");
+                break;
+            case 'disabled':
+                break;
+            case 'installed':
+                // Add file custom fields to txp_file table
+                $cols_exist = safe_query("SHOW COLUMNS FROM " . safe_pfx("txp_file") . " LIKE 'jcr_file_custom_1'");
+                if (@numRows($cols_exist) == 0) {
+                    safe_alter(
+                        "txp_file",
+                        "ADD COLUMN jcr_file_custom_1 VARCHAR(255) NOT NULL DEFAULT '' AFTER author,
+                         ADD COLUMN jcr_file_custom_2 VARCHAR(255) NOT NULL DEFAULT '' AFTER jcr_file_custom_1,
+                         ADD COLUMN jcr_file_custom_3 VARCHAR(255) NOT NULL DEFAULT '' AFTER jcr_file_custom_2,
+                         ADD COLUMN jcr_file_custom_4 VARCHAR(255) NOT NULL DEFAULT '' AFTER jcr_file_custom_3,
+                         ADD COLUMN jcr_file_custom_5 VARCHAR(255) NOT NULL DEFAULT '' AFTER jcr_file_custom_4"
+                    );
+                }
+
+                // Add prefs for file custom field names
+                create_pref("file_custom_1_set", "", "jcr_file_custom", "0", "file_custom_set", "1");
+                create_pref("file_custom_2_set", "", "jcr_file_custom", "0", "file_custom_set", "2");
+                create_pref("file_custom_3_set", "", "jcr_file_custom", "0", "file_custom_set", "3");
+                create_pref("file_custom_4_set", "", "jcr_file_custom", "0", "file_custom_set", "4");
+                create_pref("file_custom_5_set", "", "jcr_file_custom", "0", "file_custom_set", "5");
+
+                // Insert initial value for cf1 if none already exists (so that upgrade works)
+                $cf_pref = get_pref("file_custom_1_set");
+                if ($cf_pref === "") {
+                    set_pref("file_custom_1_set", "custom1");
+                }
+
+                // Upgrade: Migrate v1 plugin legacy column
+                $legacy = safe_query("SHOW COLUMNS FROM " . safe_pfx("txp_file") . " LIKE 'jcr_file_custom'");
+                if (@numRows($legacy) > 0) {
+                    // Copy contents of jcr_file_custom to jcr_file_custom_1 (where not empty/NULL)
+                    safe_update("txp_file", "`jcr_file_custom_1` = `jcr_file_custom`", "jcr_file_custom IS NOT NULL");
+                    // Delete jcr_file_custom column
+                    safe_alter("txp_file", "DROP COLUMN `jcr_file_custom`");
+                    // Update language string (is seemingly not replaced by textpack)
+                    safe_update("txp_lang", "data = 'File custom fields'", "name = 'jcr_file_custom' AND lang = 'en'");
+                    safe_update("txp_lang", "data = 'Datei Custom-Felder'", "name = 'jcr_file_custom' AND lang = 'de'");
+                }
+                break;
+            case 'deleted':
+                // Remove columns from file table
+                safe_alter(
+                    "txp_file",
+                    'DROP COLUMN jcr_file_custom_1,
+                     DROP COLUMN jcr_file_custom_2,
+                     DROP COLUMN jcr_file_custom_3,
+                     DROP COLUMN jcr_file_custom_4,
+                     DROP COLUMN jcr_file_custom_5'
+                );
+                // Remove all prefs from event 'jcr_file_custom'.
+                remove_pref(null, "jcr_file_custom");
+                break;
+        }
+        return;
+    }
 
 	/**
 	 * Paint additional fields for file custom field
@@ -121,12 +169,30 @@ class jcr_file_custom
 	 */
 	public static function ui($event, $step, $dummy, $rs)
 	{
-		extract(lAtts(array(
-			'jcr_file_custom' => ''
+		global $prefs;
+
+        extract(lAtts(array(
+			"jcr_file_custom_1" => "",
+            "jcr_file_custom_2" => "",
+            "jcr_file_custom_3" => "",
+            "jcr_file_custom_4" => "",
+            "jcr_file_custom_5" => "",
 		), $rs, 0));
 
-		return
-			inputLabel('jcr_file_custom', fInput('text', 'jcr_file_custom', $jcr_file_custom, '', '', '', INPUT_REGULAR, '', 'jcr_file_custom'), 'jcr_file_custom').n;
+		$out = "";
+
+        $cfs = preg_grep("/^file_custom_\d+_set/", array_keys($prefs));
+        asort($cfs);
+
+        foreach ($cfs as $name) {
+            preg_match("/(\d+)/", $name, $match);
+
+            if ($prefs[$name] !== "") {
+                $out .= inputLabel("jcr_file_custom_" . $match[1], fInput("text", "jcr_file_custom_" . $match[1], ${"jcr_file_custom_" . $match[1]}, "", "", "", INPUT_REGULAR, "", "jcr_file_custom_" . $match[1]), "jcr_file_custom_" . $match[1]) . n;
+            }
+        }
+
+        return $out;
 	}
 
 	/**
@@ -137,51 +203,204 @@ class jcr_file_custom
 	 */
 	public static function save($event, $step)
 	{
-		extract(doSlash(psa(array('jcr_file_custom', 'id'))));
-		$id = assert_int($id);
-		safe_update('txp_file',
-		  "jcr_file_custom = '$jcr_file_custom'",
-			"id = $id"
-		);
+		extract(doSlash(psa(["jcr_file_custom_1", "jcr_file_custom_2", "jcr_file_custom_3", "jcr_file_custom_4", "jcr_file_custom_5", "id"])));
+        $id = assert_int($id);
+        safe_update(
+            "txp_file",
+            "jcr_file_custom_1 = '$jcr_file_custom_1',
+             jcr_file_custom_2 = '$jcr_file_custom_2',
+             jcr_file_custom_3 = '$jcr_file_custom_3',
+             jcr_file_custom_4 = '$jcr_file_custom_4',
+             jcr_file_custom_5 = '$jcr_file_custom_5'",
+            "id = $id"
+        );
 	}
+
+    /**
+     * Renders a HTML file custom field in the prefs.
+     *
+     * Can be altered by plugins via the 'prefs_ui > file_custom_set'
+     * pluggable UI callback event.
+     *
+     * @param  string $name HTML name of the widget
+     * @param  string $val  Initial (or current) content
+     * @return string HTML
+     * @todo   deprecate or move this when CFs are migrated to the meta store
+     */
+    public static function file_custom_set($name, $val)
+    {
+        return pluggable_ui("prefs_ui", "file_custom_set", text_input($name, $val, INPUT_REGULAR), $name, $val);
+    }
+
+    /**
+     * Re-route 'Options' link on Plugins panel to Admin › Preferences panel
+     *
+     */
+    public static function options_prefs_redirect()
+    {
+        header("Location: index.php?event=prefs#prefs_group_jcr_file_custom");
+    }
 }
 
 if (txpinterface === 'admin') {
 
-    new jcr_file_custom;
+    new jcr_file_custom();
 
 } elseif (txpinterface === 'public') {
 
     if (class_exists('\Textpattern\Tag\Registry')) {
         Txp::get('\Textpattern\Tag\Registry')
-            ->register('jcr_file_custom');
+            ->register('jcr_file_custom')
+            ->register("jcr_if_file_custom");
     }
 
 }
 
-  /**
-   * Public tag: Output custom file field
-   * @param  string $atts[escape] Convert special characters to HTML entities.
-   * @return string custom field output
-   * <code>
-   *        <txp:jcr_file_custom escape="html" />
-   * </code>
-   */
-
-    function jcr_file_custom($atts)
-    {
-        global $thisfile;
-
-        assert_file();
-
-        extract(lAtts(array(
-            'escape' => 'html',
-        ), $atts));
-
-        return ($escape == 'html')
-            ? txpspecialchars($thisfile['jcr_file_custom'])
-            : $thisfile['jcr_file_custom'];
+/**
+ * Gets a list of file custom fields.
+ *
+ * @return  array
+ */
+function jcr_get_file_custom_fields()
+{
+    global $prefs;
+    static $out = null;
+    // Have cache?
+    if (!is_array($out)) {
+        $cfs = preg_grep("/^file_custom_\d+_set/", array_keys($prefs));
+        $out = [];
+        foreach ($cfs as $name) {
+            preg_match("/(\d+)/", $name, $match);
+            if ($prefs[$name] !== "") {
+                $out[$match[1]] = strtolower($prefs[$name]);
+            }
+        }
     }
+    return $out;
+}
+
+/**
+ * Maps 'txp_file' table's columns to article data values.
+ *
+ * This function returns an array of 'data-value' => 'column' pairs.
+ *
+ * @return array
+ */
+function jcr_file_column_map()
+{
+    $file_custom = jcr_get_file_custom_fields();
+    $file_custom_map = [];
+
+    if ($file_custom) {
+        foreach ($file_custom as $i => $name) {
+            $file_custom_map[$name] = "jcr_file_custom_" . $i;
+        }
+    }
+
+    return $file_custom_map;
+}
+
+/**
+ * Public tag: Output file custom field
+ * @param  string $atts[name] Name of custom field.
+ * @param  string $atts[escape] Convert special characters to HTML entities.
+ * @param  string $atts[default] Default output if field is empty.
+ * @return string custom field output
+ * <code>
+ *        <txp:jcr_file_custom name="title_file" escape="html" />
+ * </code>
+ */
+function jcr_file_custom($atts, $thing = null)
+{
+    global $thisfile;
+
+    assert_file();
+
+    extract(
+        lAtts(
+            [
+                "class" => "",
+                "name" => get_pref("file_custom_1_set"),
+                "escape" => null,
+                "default" => "",
+                "wraptag" => "",
+            ],
+            $atts
+        )
+    );
+
+    $name = strtolower($name);
+
+    // Populate file custom field data;
+    foreach (jcr_file_column_map() as $key => $column) {
+        $thisfile[$key] = isset($column) ? $column : null;
+    }
+
+    if (!isset($thisfile[$name])) {
+        trigger_error(gTxt("field_not_found", ["{name}" => $name]), E_USER_NOTICE);
+        return "";
+    }
+    $cf_num = $thisfile[$name];
+    $cf_val = $thisfile[$cf_num];
+
+    if (!isset($thing)) {
+        $thing = $cf_val !== "" ? $cf_val : $default;
+    }
+
+    $thing = $escape === null ? txpspecialchars($thing) : parse($thing);
+
+    return !empty($thing) ? doTag($thing, $wraptag, $class) : "";
+}
+
+/**
+ * Public tag: Check if custom file field exists
+ * @param  string $atts[name]    Name of custom field.
+ * @param  string $atts[value]   Value to test against (optional).
+ * @param  string $atts[match]   Match testing: exact, any, all, pattern.
+ * @param  string $atts[separator] Item separator for match="any" or "all". Otherwise ignored.
+ * @return string custom field output
+ * <code>
+ *        <txp:jcr_if_file_custom name="menu_title" /> … <txp:else /> … </txp:jcr_if_file_custom>
+ * </code>
+ */
+function jcr_if_file_custom($atts, $thing = null)
+{
+    global $thisfile;
+
+    extract(
+        $atts = lAtts(
+            [
+                "name" => get_pref("file_custom_1_set"),
+                "value" => null,
+                "match" => "exact",
+                "separator" => "",
+            ],
+            $atts
+        )
+    );
+
+    $name = strtolower($name);
+
+    // Populate file custom field data;
+    foreach (jcr_file_column_map() as $key => $column) {
+        $thisfile[$key] = isset($column) ? $column : null;
+    }
+
+    if (!isset($thisfile[$name])) {
+        trigger_error(gTxt("field_not_found", ["{name}" => $name]), E_USER_NOTICE);
+        return "";
+    }
+    $cf_num = $thisfile[$name];
+    $cf_val = $thisfile[$cf_num];
+
+    if ($value !== null) {
+        $cond = txp_match($atts, $cf_val);
+    } else {
+        $cond = $cf_val !== "";
+    }
+
+    return isset($thing) ? parse($thing, !empty($cond)) : !empty($cond);
+}
 # --- END PLUGIN CODE ---
 if (0) {
 ?>
@@ -194,7 +413,11 @@ if (0) {
 # --- BEGIN PLUGIN HELP ---
 h1. jcr_file_custom
 
-Adds a single extra custom field of up to 255 characters to the "Content › Files":http://docs.textpattern.io/administration/files-panel panel and provides a corresponding tag to output the custom field. 
+Adds up to five extra custom fields of up to 255 characters to the "Content › Files":http://docs.textpattern.io/administration/files-panel panel and provides a corresponding tag to output the custom field and to test if it contains a value or matches a specific value.
+
+h3(#installation). Installation
+
+Paste the code into the _Admin › Plugins_ panel, install and enable the plugin.
 
 
 h2. Use cases
@@ -206,35 +429,86 @@ Use whenever extra information needs to be stored with a file. For example:
 * …
 
 
-h2(#installation). Installation
-
-Paste the code into the  _Admin › Plugins_ panel, install and enable the plugin.
-
 
 h2(#tags). Tags
 
-bc. <txp:jcr_file_custom />
+h3. jcr_file_custom
 
 Outputs the content of the file custom field.
 
-h3. Tag attributes
+h4. Tag attributes
 
-*escape*
-Escape HTML entities such as @<@, @>@ and @&@ prior to echoing the field contents. 
-Example: Use @escape=""@ to suppress conversion. Default: @html@.
+@name@
+Specifies the name of the file custom field.
+Example: Use @name="copyright_author"@ to output the copyright_author custom field. Default: jcr_file_custom_1.
+
+@escape@
+Escape HTML entities such as @<@, @>@ and @&@ prior to echoing the field contents.
+Supports extended escape values in txp 4.8
+Example: Use @escape="textile"@ to convert textile in the value. Default: none.
+
+@default@
+Specifies the default output if the custom field is empty
+Example: Use @default="Org Name"@ to output "Org Name", e.g. for when no copyright_author explicitly given. Default: empty.
+
+@wraptag@
+Wrap the custom field contents in an HTML tag
+Example: Use @wraptag="h2"@ to output @<h2>Custom field value</h2>@. Default: empty.
+
+@class@
+Specifies a class to be added to the @wraptag@ attribute
+Example: Use @wraptag="p" class="copyright"@ to output @<p class="copyright">Custom field value</p>@. Default: empty
+
+h3. jcr_if_file_custom
+
+Tests for existence of a file custom field, or whether one or several matches a value or pattern.
+
+h4. Tag attributes
+
+@name@
+Specifies the name of the file custom field.
+Example: Use @name="copyright_author"@ to output the copyright_author custom field. Default: jcr_file_custom_1.
+
+@value@
+Value to test against (optional).
+If not specified, the tag tests for the existence of any value in the specified file custom field.
+Example: Use @value="english"@ to output only those files whose “language” file custom field is english. Default: none.
+
+@match@
+Match testing: exact, any, all, pattern. See the docs for "if_custom_field":https://docs.textpattern.com/tags/if_custom_field.
+Default: exact.
+
+@separator@
+Item separator for match="any" or "all". Otherwise ignored.
+Default: empty.
 
 
-h2(#examples). Example
+h2(#examples). Examples
 
-Produce a list of downloadable documents (assigned to the file category "issues") with their publication covers:
+1. Produce a list of downloadable documents (assigned to the file category "issues") with their publication covers:
 
 bc. <txp:file_download_list wraptag="ul" break="li" category="issues">
   <a href="<txp:file_download_link />" title="<txp:file_download_name />">
-    <txp:image id='<txp:jcr_file_custom />' />
+    <txp:image id='<txp:jcr_file_custom name="file_image" />' />
+    <txp:jcr_file_custom name="file_issue" wraptag="p" class="issue" />
   </a>
 </txp:file_download_list>
 
-p. when the file custom field is used to store the Image ID# of the document cover image.
+p. where the @file_image@ and @file_issue@ file custom fields are used to store the Image ID# of the document cover image and the issue number of the document respectively.
+
+2. Outputs a discography with CD covers, release year and a link to a preview page if one exists:
+
+bc. <txp:file_download_list wraptag="ul" break="li" category="discography">
+  <div class="album">
+    <a href="<txp:file_download_link />" title="<txp:file_download_name />">
+      <txp:image id='<txp:jcr_file_custom name="cd_image" />' />
+      <h2 class="album-title"><txp:file_description /> <txp:jcr_file_custom name="cd_year" wraptag="span" class="album-year" /></h2>
+    </a>
+    <txp:jcr_if_file_custom name="cd_preview_article">
+      <a href="<txp:permlink id='<txp:jcr_file_custom name="cd_preview_article" />' />" class="preview-button">Preview></a>
+    </txp:jcr_if_file_custom>
+  </div>
+</txp:file_download_list>
 
 
 h2. Changing the label of the custom field
@@ -242,10 +516,11 @@ h2. Changing the label of the custom field
 The name of custom field can be changed by specifying a new label using the _Install from Textpack_ field in the "Admin › Languages":http://docs.textpattern.io/administration/languages-panel panel. Enter your own information in the following pattern and click *Upload*:
 
 bc.. #@admin
-#@language en-gb
-jcr_file_custom => Your label
+#@language en
+jcr_file_custom_1 => Your label
+jcr_file_custom_2 => Your other label
 
-p. replacing @en-gb@ with your own language and @Your label@ with your own desired label.
+p. replacing @en@ with your own language and @Your label@ with your own desired label.
 
 
 h2(#deinstallation). De-installation
@@ -253,18 +528,15 @@ h2(#deinstallation). De-installation
 The plugin cleans up after itself: deinstalling the plugin removes the extra column from the database. To stop using the plugin but keep the database tables, just disable (deactivate) the plugin but don't delete it.
 
 
-h2(#changelog). Changelog
+h2(#changelog). Changelog + Credits
 
-h3. Version 0.1.1 – 2016/12/05
+h3. Changelog
 
-* Remedy table not being created on install 
+* Version 0.2.0 – 2020/12/18 – Expand to handle multiple custom fields
+* Version 0.1.1 – 2016/12/05 – Remedy table not being created on install
+* Version 0.1 – 2016/03/04
 
-h3. Version 0.1 – 2016/03/04
-
-* First release
-
-
-h2(#credits). Credits
+h3. Credits
 
 Robert Wetzlmayr’s "wet_profile":https://github.com/rwetzlmayr/wet_profile plugin for the starting point, and further examples by "Stef Dawson":http://www.stefdawson.com and "Jukka Svahn":https://github.com/gocom.
 # --- END PLUGIN HELP ---
