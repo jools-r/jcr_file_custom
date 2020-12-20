@@ -1,6 +1,11 @@
 h1. jcr_file_custom
 
-Adds a single extra custom field of up to 255 characters to the "Content › Files":http://docs.textpattern.io/administration/files-panel panel and provides a corresponding tag to output the custom field. 
+Adds up to five extra custom fields of up to 255 characters to the "Content › Files":http://docs.textpattern.io/administration/files-panel panel and provides a corresponding tag to output the custom field and to test if it contains a value or matches a specific value.
+
+
+h3(#installation). Installation
+
+Paste the code into the _Admin › Plugins_ panel, install and enable the plugin.
 
 
 h2. Use cases
@@ -8,39 +13,90 @@ h2. Use cases
 Use whenever extra information needs to be stored with a file. For example:
 
 * Store a txp image ID number and use it to associate a cover image with the file.
-* Store associated details, for example the author(s) of a document or duration of a music track.
-* …
-
-
-h2(#installation). Installation
-
-Paste the code into the  _Admin › Plugins_ panel, install and enable the plugin.
+* Store associated details, for example the author(s) of a document, year of issue, duration of a music track …
 
 
 h2(#tags). Tags
 
-bc. <txp:jcr_file_custom />
+h3. jcr_file_custom
 
 Outputs the content of the file custom field.
 
-h3. Tag attributes
+h4. Tag attributes
 
-*escape*
-Escape HTML entities such as @<@, @>@ and @&@ prior to echoing the field contents. 
-Example: Use @escape=""@ to suppress conversion. Default: @html@.
+@name@
+Specifies the name of the file custom field.
+Example: Use @name="copyright_author"@ to output the copyright_author custom field. Default: jcr_file_custom_1.
+
+@escape@
+Escape HTML entities such as @<@, @>@ and @&@ prior to echoing the field contents.
+Supports extended escape values in txp 4.8
+Example: Use @escape="textile"@ to convert textile in the value. Default: none.
+
+@default@
+Specifies the default output if the custom field is empty
+Example: Use @default="Org Name"@ to output "Org Name", e.g. for when no copyright_author explicitly given. Default: empty.
+
+@wraptag@
+Wrap the custom field contents in an HTML tag
+Example: Use @wraptag="h2"@ to output @<h2>Custom field value</h2>@. Default: empty.
+
+@class@
+Specifies a class to be added to the @wraptag@ attribute
+Example: Use @wraptag="p" class="copyright"@ to output @<p class="copyright">Custom field value</p>@. Default: empty
+
+h3. jcr_if_file_custom
+
+Tests for existence of a file custom field, or whether one or several matches a value or pattern.
+
+h4. Tag attributes
+
+@name@
+Specifies the name of the file custom field.
+Example: Use @name="copyright_author"@ to output the copyright_author custom field. Default: jcr_file_custom_1.
+
+@value@
+Value to test against (optional).
+If not specified, the tag tests for the existence of any value in the specified file custom field.
+Example: Use @value="english"@ to output only those files whose “language” file custom field is english. Default: none.
+
+@match@
+Match testing: exact, any, all, pattern. See the docs for "if_custom_field":https://docs.textpattern.com/tags/if_custom_field.
+Default: exact.
+
+@separator@
+Item separator for match="any" or "all". Otherwise ignored.
+Default: empty.
 
 
-h2(#examples). Example
+h2(#examples). Examples
 
-Produce a list of downloadable documents (assigned to the file category "issues") with their publication covers:
+1. Produce a list of downloadable documents (assigned to the file category "issues") with their publication covers:
 
 bc. <txp:file_download_list wraptag="ul" break="li" category="issues">
   <a href="<txp:file_download_link />" title="<txp:file_download_name />">
-    <txp:image id='<txp:jcr_file_custom />' />
+    <txp:image id='<txp:jcr_file_custom name="file_image" />' />
+    <txp:jcr_file_custom name="file_issue" wraptag="p" class="issue" />
   </a>
 </txp:file_download_list>
 
-p. when the file custom field is used to store the Image ID# of the document cover image.
+p. where the @file_image@ and @file_issue@ file custom fields are used to store the Image ID# of the document cover image and the issue number of the document respectively.
+
+2. Outputs a discography with CD covers, release year and a link to a preview page if one exists:
+
+bc. <txp:file_download_list wraptag="ul" break="li" category="discography">
+  <div class="album">
+    <a href="<txp:file_download_link />" title="<txp:file_download_name />">
+      <txp:image id='<txp:jcr_file_custom name="cd_image" />' />
+      <h2 class="album-title"><txp:file_description /> <txp:jcr_file_custom name="cd_year" wraptag="span" class="album-year" /></h2>
+    </a>
+    <txp:jcr_if_file_custom name="cd_preview_article">
+      <a href="<txp:permlink id='<txp:jcr_file_custom name="cd_preview_article" />' />" class="preview-button">Preview></a>
+    </txp:jcr_if_file_custom>
+  </div>
+</txp:file_download_list>
+
+p. where file custom fields have been defined for @cd_image@ (the image ID# of the album cover), @cd_year@ (release year) and @cd_preview_article@ (e.g. the article ID# of a corresponding article with preview of the album).
 
 
 h2. Changing the label of the custom field
@@ -48,10 +104,11 @@ h2. Changing the label of the custom field
 The name of custom field can be changed by specifying a new label using the _Install from Textpack_ field in the "Admin › Languages":http://docs.textpattern.io/administration/languages-panel panel. Enter your own information in the following pattern and click *Upload*:
 
 bc.. #@admin
-#@language en-gb
-jcr_file_custom => Your label
+#@language en
+jcr_file_custom_1 => Your label
+jcr_file_custom_2 => Your other label
 
-p. replacing @en-gb@ with your own language and @Your label@ with your own desired label.
+p. replacing @en@ with your own language and @Your label@ with your own desired label.
 
 
 h2(#deinstallation). De-installation
@@ -59,17 +116,14 @@ h2(#deinstallation). De-installation
 The plugin cleans up after itself: deinstalling the plugin removes the extra column from the database. To stop using the plugin but keep the database tables, just disable (deactivate) the plugin but don't delete it.
 
 
-h2(#changelog). Changelog
+h2(#changelog). Changelog + Credits
 
-h3. Version 0.1.1 – 2016/12/05
+h3. Changelog
 
-* Remedy table not being created on install 
+* Version 0.2.0 – 2020/12/18 – Expand to handle multiple custom fields
+* Version 0.1.1 – 2016/12/05 – Remedy table not being created on install
+* Version 0.1 – 2016/03/04
 
-h3. Version 0.1 – 2016/03/04
-
-* First release
-
-
-h2(#credits). Credits
+h3. Credits
 
 Robert Wetzlmayr’s "wet_profile":https://github.com/rwetzlmayr/wet_profile plugin for the starting point, and further examples by "Stef Dawson":http://www.stefdawson.com and "Jukka Svahn":https://github.com/gocom.

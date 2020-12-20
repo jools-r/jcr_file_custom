@@ -425,9 +425,7 @@ h2. Use cases
 Use whenever extra information needs to be stored with a file. For example:
 
 * Store a txp image ID number and use it to associate a cover image with the file.
-* Store associated details, for example the author(s) of a document or duration of a music track.
-* …
-
+* Store associated details, for example the author(s) of a document, year of issue, duration of a music track …
 
 
 h2(#tags). Tags
@@ -510,6 +508,7 @@ bc. <txp:file_download_list wraptag="ul" break="li" category="discography">
   </div>
 </txp:file_download_list>
 
+p. where file custom fields have been defined for @cd_image@ (the image ID# of the album cover), @cd_year@ (release year) and @cd_preview_article@ (e.g. the article ID# of a corresponding article with preview of the album).
 
 h2. Changing the label of the custom field
 
