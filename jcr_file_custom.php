@@ -276,14 +276,13 @@ if (txpinterface === 'admin') {
 
     new jcr_file_custom();
 
-} elseif (txpinterface === 'public') {
+}
 
-    if (class_exists('\Textpattern\Tag\Registry')) {
-        Txp::get('\Textpattern\Tag\Registry')
-            ->register('jcr_file_custom')
-            ->register("jcr_if_file_custom");
-    }
-
+// Register public tags (not restricted to public so that usable on dashboards)
+if (class_exists('\Textpattern\Tag\Registry')) {
+    Txp::get('\Textpattern\Tag\Registry')
+        ->register('jcr_file_custom')
+        ->register("jcr_if_file_custom");
 }
 
 /**
