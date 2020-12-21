@@ -54,12 +54,36 @@ $plugin['flags'] = '3';
 // #@language ISO-LANGUAGE-CODE
 // abc_string_name => Localized String
 
+// Customise the display of the custom field form labels by pasting the following into the Textpack box
+// in Settings › Languages replacing the language code and field label names:
+// #@owner jcr_file_custom
+// #@language en, en-gb, en-us
+// #@file_edit
+// jcr_file_custom_1 => Image ID
+// jcr_file_custom_2 => Issue year
+// jcr_file_custom_3 => Publisher
+// jcr_file_custom_5 => ISBN
+// jcr_file_custom_4 => Preview Article ID
+
+
 $plugin['textpack'] = <<<EOT
-#@admin
-#@language en
+#@owner jcr_file_custom
+#@language en, en-gb, en-us
+#@prefs
 jcr_file_custom => File custom fields
+file_custom_1_set => File custom field 1 name
+file_custom_2_set => File custom field 2 name
+file_custom_3_set => File custom field 3 name
+file_custom_4_set => File custom field 4 name
+file_custom_5_set => File custom field 5 name
 #@language de
+#@prefs
 jcr_file_custom => Datei Custom-Felder
+file_custom_1_set => Name des 1. Datei-Custom Feldes
+file_custom_2_set => Name des 2. Datei-Custom Feldes
+file_custom_3_set => Name des 3. Datei-Custom Feldes
+file_custom_4_set => Name des 4. Datei-Custom Feldes
+file_custom_5_set => Name des 5. Datei-Custom Feldes
 EOT;
 
 // End of textpack
@@ -137,8 +161,8 @@ class jcr_file_custom
                     // Delete jcr_file_custom column
                     safe_alter("txp_file", "DROP COLUMN `jcr_file_custom`");
                     // Update language string (is seemingly not replaced by textpack)
-                    safe_update("txp_lang", "data = 'File custom fields'", "name = 'jcr_file_custom' AND lang = 'en'");
-                    safe_update("txp_lang", "data = 'Datei Custom-Felder'", "name = 'jcr_file_custom' AND lang = 'de'");
+                    safe_update("txp_lang", "data = 'File custom fields', owner = 'jcr_file_custom'", "name = 'jcr_file_custom' AND lang = 'en'");
+                    safe_update("txp_lang", "data = 'Datei Custom-Felder', owner = 'jcr_file_custom'", "name = 'jcr_file_custom' AND lang = 'de'");
                 }
                 break;
             case 'deleted':
@@ -153,6 +177,12 @@ class jcr_file_custom
                 );
                 // Remove all prefs from event 'jcr_file_custom'.
                 remove_pref(null, "jcr_file_custom");
+
+                // Remove all associated lang strings
+                safe_delete(
+                  "txp_lang",
+                  "owner = 'jcr_file_custom'"
+                );
                 break;
         }
         return;
