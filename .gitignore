@@ -6,6 +6,7 @@
 .DS_Store?
 .Spotlight-V100
 .Trashes
+.editorconfig
 Icon?
 ehthumbs.db
 Thumbs.db
@@ -21,3 +22,5 @@ Thumbs.db
 .github/index
 .nova
 .vscode
+zem_tpl.php
+classTextile.php
