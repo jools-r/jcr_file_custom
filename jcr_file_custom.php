@@ -89,7 +89,7 @@ EOT;
 // End of textpack
 
 if (!defined('txpinterface'))
-        @include_once('zem_tpl.php');
+    @include_once('zem_tpl.php');
 
 # --- BEGIN PLUGIN CODE ---
 class jcr_file_custom
@@ -99,10 +99,10 @@ class jcr_file_custom
      */
     function __construct()
     {
-    	// Hook into the system's callbacks.
-    	register_callback(array(__CLASS__, 'lifecycle'), 'plugin_lifecycle.jcr_file_custom');
-    	register_callback(array(__CLASS__, 'ui'), 'file_ui', 'extend_detail_form');
-    	register_callback(array(__CLASS__, 'save'), 'file', 'file_save');
+        // Hook into the system's callbacks.
+        register_callback(array(__CLASS__, 'lifecycle'), 'plugin_lifecycle.jcr_file_custom');
+        register_callback(array(__CLASS__, 'ui'), 'file_ui', 'extend_detail_form');
+        register_callback(array(__CLASS__, 'save'), 'file', 'file_save');
 
         // Prefs pane for custom fields
         add_privs("prefs.jcr_file_custom", "1");
@@ -112,7 +112,7 @@ class jcr_file_custom
         register_callback(array(__CLASS__, "options_prefs_redirect"), "plugin_prefs.jcr_file_custom");
     }
 
-	/**
+    /**
      * Add and remove custom field from txp_file table.
      *
      * @param $event string
@@ -188,28 +188,28 @@ class jcr_file_custom
         return;
     }
 
-	/**
-	 * Paint additional fields for file custom field
-	 *
-	 * @param $event string
-	 * @param $step string
-	 * @param $dummy string
-	 * @param $rs array The current file's data
-	 * @return string
-	 */
-	public static function ui($event, $step, $dummy, $rs)
-	{
-		global $prefs;
+    /**
+     * Paint additional fields for file custom field
+     *
+     * @param $event string
+     * @param $step string
+     * @param $dummy string
+     * @param $rs array The current file's data
+     * @return string
+     */
+    public static function ui($event, $step, $dummy, $rs)
+    {
+        global $prefs;
 
         extract(lAtts(array(
-			"jcr_file_custom_1" => "",
+            "jcr_file_custom_1" => "",
             "jcr_file_custom_2" => "",
             "jcr_file_custom_3" => "",
             "jcr_file_custom_4" => "",
             "jcr_file_custom_5" => "",
-		), $rs, 0));
+        ), $rs, 0));
 
-		$out = "";
+        $out = "";
 
         $cfs = preg_grep("/^file_custom_\d+_set/", array_keys($prefs));
         asort($cfs);
@@ -223,17 +223,17 @@ class jcr_file_custom
         }
 
         return $out;
-	}
+    }
 
-	/**
-	 * Save additional file custom fields
-	 *
-	 * @param $event string
-	 * @param $step string
-	 */
-	public static function save($event, $step)
-	{
-		extract(doSlash(psa(array("jcr_file_custom_1", "jcr_file_custom_2", "jcr_file_custom_3", "jcr_file_custom_4", "jcr_file_custom_5", "id"))));
+    /**
+     * Save additional file custom fields
+     *
+     * @param $event string
+     * @param $step string
+     */
+    public static function save($event, $step)
+    {
+        extract(doSlash(psa(array("jcr_file_custom_1", "jcr_file_custom_2", "jcr_file_custom_3", "jcr_file_custom_4", "jcr_file_custom_5", "id"))));
         $id = assert_int($id);
         safe_update(
             "txp_file",
@@ -244,7 +244,7 @@ class jcr_file_custom
              jcr_file_custom_5 = '$jcr_file_custom_5'",
             "id = $id"
         );
-	}
+    }
 
     /**
      * Renders a HTML file custom field in the prefs.
