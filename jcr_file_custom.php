@@ -128,15 +128,15 @@ class jcr_file_custom
                 break;
             case 'installed':
                 // Add file custom fields to txp_file table
-                $cols_exist = safe_query("SHOW COLUMNS FROM " . safe_pfx("txp_file") . " LIKE 'jcr_file_custom_1'");
+                $cols_exist = safe_query("SHOW COLUMNS FROM " . safe_pfx("txp_file") . " LIKE 'jcr_file_custom_%'");
                 if (@numRows($cols_exist) == 0) {
                     safe_alter(
                         "txp_file",
-                        "ADD COLUMN jcr_file_custom_1 VARCHAR(255) NOT NULL DEFAULT '' AFTER author,
-                         ADD COLUMN jcr_file_custom_2 VARCHAR(255) NOT NULL DEFAULT '' AFTER jcr_file_custom_1,
-                         ADD COLUMN jcr_file_custom_3 VARCHAR(255) NOT NULL DEFAULT '' AFTER jcr_file_custom_2,
-                         ADD COLUMN jcr_file_custom_4 VARCHAR(255) NOT NULL DEFAULT '' AFTER jcr_file_custom_3,
-                         ADD COLUMN jcr_file_custom_5 VARCHAR(255) NOT NULL DEFAULT '' AFTER jcr_file_custom_4"
+                        "ADD COLUMN jcr_file_custom_1 VARCHAR(255) NOT NULL DEFAULT '',
+                         ADD COLUMN jcr_file_custom_2 VARCHAR(255) NOT NULL DEFAULT '',
+                         ADD COLUMN jcr_file_custom_3 VARCHAR(255) NOT NULL DEFAULT '',
+                         ADD COLUMN jcr_file_custom_4 VARCHAR(255) NOT NULL DEFAULT '',
+                         ADD COLUMN jcr_file_custom_5 VARCHAR(255) NOT NULL DEFAULT ''"
                     );
                 }
 
