@@ -97,7 +97,7 @@ class jcr_file_custom
     /**
      * Initialise.
      */
-     function __construct()
+    function __construct()
     {
     	// Hook into the system's callbacks.
     	register_callback(array(__CLASS__, 'lifecycle'), 'plugin_lifecycle.jcr_file_custom');
@@ -109,7 +109,7 @@ class jcr_file_custom
 
         // Redirect 'Options' link on plugins panel to preferences pane
         add_privs("plugin_prefs.jcr_file_custom", "1");
-        register_callback([__CLASS__, "options_prefs_redirect"], "plugin_prefs.jcr_file_custom");
+        register_callback(array(__CLASS__, "options_prefs_redirect"), "plugin_prefs.jcr_file_custom");
     }
 
 	/**
@@ -233,7 +233,7 @@ class jcr_file_custom
 	 */
 	public static function save($event, $step)
 	{
-		extract(doSlash(psa(["jcr_file_custom_1", "jcr_file_custom_2", "jcr_file_custom_3", "jcr_file_custom_4", "jcr_file_custom_5", "id"])));
+		extract(doSlash(psa(array("jcr_file_custom_1", "jcr_file_custom_2", "jcr_file_custom_3", "jcr_file_custom_4", "jcr_file_custom_5", "id"))));
         $id = assert_int($id);
         safe_update(
             "txp_file",
@@ -349,9 +349,9 @@ function jcr_file_custom($atts, $thing = null)
     extract(
         lAtts(
             [
-                "class" => "",
-                "name" => get_pref("file_custom_1_set"),
-                "escape" => null,
+                "class"   => "",
+                "name"    => get_pref("file_custom_1_set"),
+                "escape"  => null,
                 "default" => "",
                 "wraptag" => "",
             ],
