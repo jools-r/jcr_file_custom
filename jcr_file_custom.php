@@ -58,7 +58,7 @@ $plugin['flags'] = '3';
 // in Settings › Languages replacing the language code and field label names:
 // #@owner jcr_file_custom
 // #@language en, en-gb, en-us
-// #@file_edit
+// #@file
 // jcr_file_custom_1 => Image ID
 // jcr_file_custom_2 => Issue year
 // jcr_file_custom_3 => Publisher
@@ -557,7 +557,7 @@ The label displayed alongside the custom field in the edit file panel can be cha
 
 bc. #@owner jcr_file_custom
 #@language en, en-gb, en-us
-#@file_edit
+#@file
 jcr_file_custom_1 => Your label
 jcr_file_custom_2 => Your other label
 …
