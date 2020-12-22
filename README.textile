@@ -1,14 +1,8 @@
 h1. jcr_file_custom
 
-Adds up to five extra custom fields of up to 255 characters to the "Content › Files":http://docs.textpattern.io/administration/files-panel panel and provides a corresponding tag to output the custom field and to test if it contains a value or matches a specific value.
+Adds up to five extra custom fields of up to 255 characters to the "Content › Files":http://docs.textpattern.io/administration/files-panel panel along with corresponding tags to output the custom field and to test if it contains a value or matches a specific value.
 
-
-h3(#installation). Installation
-
-Paste the code into the _Admin › Plugins_ panel, install and enable the plugin.
-
-
-h2. Use cases
+h3. Use cases
 
 Use whenever extra information needs to be stored with a file. For example:
 
@@ -16,7 +10,18 @@ Use whenever extra information needs to be stored with a file. For example:
 * Store associated details, for example the author(s) of a document, year of issue, duration of a music track …
 
 
-h2(#tags). Tags
+h2. Installation / Deinstallation
+
+h3. Installation
+
+Paste the @.txt@ installer code into the _Admin › Plugins_ panel, or upload the plugin's @.php@ file via the _Upload plugin_ button, then install and enable the plugin.
+
+h3. De-installation
+
+The plugin cleans up after itself: deinstalling (deleting) the plugin removes the extra columns from the database as well as custom field names and labels. To stop using the plugin but keep the custom field data in the database, just disable (deactivate) the plugin but don't delete it.
+
+
+h2. Plugin tags
 
 h3. jcr_file_custom
 
@@ -45,6 +50,7 @@ Example: Use @wraptag="h2"@ to output @<h2>Custom field value</h2>@. Default: em
 Specifies a class to be added to the @wraptag@ attribute
 Example: Use @wraptag="p" class="copyright"@ to output @<p class="copyright">Custom field value</p>@. Default: empty
 
+
 h3. jcr_if_file_custom
 
 Tests for existence of a file custom field, or whether one or several matches a value or pattern.
@@ -69,9 +75,11 @@ Item separator for match="any" or "all". Otherwise ignored.
 Default: empty.
 
 
-h2(#examples). Examples
+h2. Examples
 
-1. Produce a list of downloadable documents (assigned to the file category "issues") with their publication covers:
+h3. Example 1
+
+Produce a list of downloadable documents (assigned to the file category "issues") with their publication covers:
 
 bc. <txp:file_download_list wraptag="ul" break="li" category="issues">
   <a href="<txp:file_download_link />" title="<txp:file_download_name />">
@@ -82,7 +90,9 @@ bc. <txp:file_download_list wraptag="ul" break="li" category="issues">
 
 p. where the @file_image@ and @file_issue@ file custom fields are used to store the Image ID# of the document cover image and the issue number of the document respectively.
 
-2. Outputs a discography with CD covers, release year and a link to a preview page if one exists:
+h3. Example 2
+
+Outputs a discography with CD covers, release year and a link to a preview page if one exists:
 
 bc. <txp:file_download_list wraptag="ul" break="li" category="discography">
   <div class="album">
@@ -99,24 +109,21 @@ bc. <txp:file_download_list wraptag="ul" break="li" category="discography">
 p. where file custom fields have been defined for @cd_image@ (the image ID# of the album cover), @cd_year@ (release year) and @cd_preview_article@ (e.g. the article ID# of a corresponding article with preview of the album).
 
 
-h2. Changing the label of the custom field
+h2. Custom field labels
 
-The name of custom field can be changed by specifying a new label using the _Install from Textpack_ field in the "Admin › Languages":http://docs.textpattern.io/administration/languages-panel panel. Enter your own information in the following pattern and click *Upload*:
+The label displayed alongside the custom field in the edit file panel can be changed by specifying a new label using the _Install from Textpack_ field in the "Admin › Languages":http://docs.textpattern.io/administration/languages-panel panel. Enter your own information in the following pattern and click *Upload*:
 
-bc.. #@admin
-#@language en
+bc. #@owner jcr_file_custom
+#@language en, en-gb, en-us
+#@file
 jcr_file_custom_1 => Your label
 jcr_file_custom_2 => Your other label
+…
 
 p. replacing @en@ with your own language and @Your label@ with your own desired label.
 
 
-h2(#deinstallation). De-installation
-
-The plugin cleans up after itself: deinstalling the plugin removes the extra column from the database. To stop using the plugin but keep the database tables, just disable (deactivate) the plugin but don't delete it.
-
-
-h2(#changelog). Changelog + Credits
+h2. Changelog and credits
 
 h3. Changelog
 
