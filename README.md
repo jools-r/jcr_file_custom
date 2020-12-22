@@ -15,13 +15,17 @@ example:
 -   Store associated details, for example the author(s) of a document,
     year of issue, duration of a music track ...
 
-## Installation / Deinstallation
+## Installation / Deinstallation / Upgrading
 
 ### Installation
 
 Paste the `.txt` installer code into the *Admin › Plugins* panel, or
 upload the plugin's `.php` file via the *Upload plugin* button, then
 install and enable the plugin.
+
+### Upgrading
+
+The plugin automatically migrates custom field data and the database structure from the earlier single custom field variant (v0.1) to the new format. No changes are needed to the public tags as the new default settings correspond to the old tag. Nevertheless, it is always advisable to make a database backup before upgrading.
 
 ### De-installation
 
